@@ -1,9 +1,8 @@
 import React from 'react';
 import { cn } from '../lib/utils';
 import {
-  Beef, Coffee, Pizza, Salad, Sandwich, Dessert, Fish, Soup
+  Cake, Salad, Sandwich, Dessert, Fish, Soup, Milk, Ham
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 interface CategoryBadgeProps {
   category: {
     name: string;
@@ -17,10 +16,10 @@ interface CategoryBadgeProps {
 // const navigate = useNavigate();
 
 const iconMap: Record<string, React.ReactNode> = {
-  pizza: <Pizza className="h-6 w-6" />,
-  coffee: <Coffee className="h-6 w-6" />,
+  dairies: <Milk className="h-6 w-6" />,
+  cakes: <Cake className="h-6 w-6" />,
   burger: <Sandwich className="h-6 w-6" />,
-  meat: <Beef className="h-6 w-6" />,
+  chickens: <Ham className="h-6 w-6" />,
   salad: <Salad className="h-6 w-6" />,
   dessert: <Dessert className="h-6 w-6" />,
   seafood: <Fish className="h-6 w-6" />,

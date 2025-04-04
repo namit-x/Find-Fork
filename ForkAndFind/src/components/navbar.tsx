@@ -13,16 +13,11 @@ const Navbar: React.FC = () => {
           </span>
         </a>
         
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden md:flex items-center space-x-20">
           <a href="#" className="text-gray-700 hover:text-food-red transition-colors">Home</a>
           <a href="#" className="text-gray-700 hover:text-food-red transition-colors">Explore</a>
           <a href="#" className="text-gray-700 hover:text-food-red transition-colors">About</a>
           <a href="#" className="text-gray-700 hover:text-food-red transition-colors">Contact</a>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" className="text-gray-700 hover:text-food-red">Sign In</Button>
-          <Button className="bg-food-red hover:bg-food-red/90 text-white">Sign Up</Button>
         </div>
       </div>
     </nav>

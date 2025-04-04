@@ -1,126 +1,116 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from '../components/navbar';
 import Hero from '../components/hero';
 import CategoryBadge from '../components/CategoryBadge';
-import FilterSection from '../components/FilterSection';
-import RestaurantCard from '../components/RestaurantCard';
+// import FilterSection from '../components/FilterSection';
+import FoodItemCard from '../components/FoodItemCard';
+import { Footer } from '../components/Footer';
+import { Loader } from 'lucide-react';
 
 const CATEGORIES = [
-  { name: 'Pizza', icon: 'pizza' },
+  { name: 'Dairies', icon: 'dairies' },
   { name: 'Burger', icon: 'burger' },
-  { name: 'Coffee', icon: 'coffee' },
+  { name: 'Cakes', icon: 'cakes' },
   { name: 'Salad', icon: 'salad' },
-  { name: 'Steak', icon: 'meat' },
+  { name: 'Chickens', icon: 'chickens' },
   { name: 'Seafood', icon: 'seafood' },
-  { name: 'Dessert', icon: 'dessert' },
-  { name: 'Soup', icon: 'soup' },
+  { name: 'Desserts', icon: 'dessert' },
+  { name: 'Soups', icon: 'soup' },
 ];
 
-const RESTAURANTS = [
-  {
-    id: 1,
-    name: 'Delicious Pizza House',
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2070&auto=format&fit=crop',
-    cuisine: 'Italian, Pizza, Pasta',
-    rating: 4.8,
-    reviewCount: 342,
-    priceRange: '$$',
-    timeEstimate: '25-35 min',
-    distance: '1.2 miles',
-    isNew: true,
-  },
-  {
-    id: 2,
-    name: 'Burger Joint',
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1899&auto=format&fit=crop',
-    cuisine: 'American, Burgers, Fast Food',
-    rating: 4.5,
-    reviewCount: 286,
-    priceRange: '$',
-    timeEstimate: '15-25 min',
-    distance: '0.8 miles',
-  },
-  {
-    id: 3,
-    name: 'Green Garden',
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop',
-    cuisine: 'Vegetarian, Healthy, Salads',
-    rating: 4.7,
-    reviewCount: 201,
-    priceRange: '$$',
-    timeEstimate: '20-30 min',
-    distance: '1.5 miles',
-  },
-  {
-    id: 4,
-    name: 'Seafood Palace',
-    image: 'https://images.unsplash.com/photo-1579631542780-4267d9a4d64c?q=80&w=2070&auto=format&fit=crop',
-    cuisine: 'Seafood, Fine Dining',
-    rating: 4.9,
-    reviewCount: 178,
-    priceRange: '$$$',
-    timeEstimate: '30-45 min',
-    distance: '2.1 miles',
-  },
-  {
-    id: 5,
-    name: 'Sweet Treats',
-    image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?q=80&w=1887&auto=format&fit=crop',
-    cuisine: 'Dessert, Bakery, Cafe',
-    rating: 4.6,
-    reviewCount: 156,
-    priceRange: '$$',
-    timeEstimate: '15-25 min',
-    distance: '0.6 miles',
-    isNew: true,
-  },
-  {
-    id: 6,
-    name: 'Steak House',
-    image: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?q=80&w=2070&auto=format&fit=crop',
-    cuisine: 'Steakhouse, American',
-    rating: 4.8,
-    reviewCount: 224,
-    priceRange: '$$$',
-    timeEstimate: '25-40 min',
-    distance: '1.8 miles',
-  },
-];
 
 const Homepage = () => {
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState('recommended');
-  const [priceFilter, setPriceFilter] = useState<string[]>([]);
-  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [sortType, setSortType] = useState<{ field: 'name' | 'nutrition', order: 'asc' | 'desc' }>({ field: 'name', order: 'asc' });
+  const [processedFoodItems, setProcessedFoodItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Filter restaurants based on selected filters
-  const filteredRestaurants = RESTAURANTS.filter(restaurant => {
-    // Filter by price
-    if (priceFilter.length > 0 && !priceFilter.includes(restaurant.priceRange)) {
-      return false;
+  useEffect(() => {
+    const fetchFoodItems = async () => {
+      try {
+
+        setIsLoading(true);
+        let response;
+        if (!selectedCategory) {
+          response = await fetch(`https://world.openfoodfacts.org/api/v2/search.json?page_size=20`);
+        }
+        else {
+          // console.log('Fetching for category:', selectedCategory);
+          response = await fetch(`https://world.openfoodfacts.org/facets/categories/${selectedCategory}.json?page=1&page_size=20`);
+        }
+        const data = await response.json();
+        // console.log('API Response:', data);
+
+        if (!data.products || !Array.isArray(data.products)) {
+          console.error("No products found or invalid data format!");
+          return;
+        }
+
+        let processedFoodItems = data.products
+          .filter((product: any) => {
+            // Check if product has basic required fields
+            if (!product || !product.code || !product.product_name) return false;
+
+            // Check if product has any image
+            return !!(
+              product.image_url ||
+              product.image_thumb_url ||
+              (product.images && product.images[0]) ||
+              product.image_small_url ||
+              product.image_front_url
+            );
+          })
+          .map((product: any) => {
+            // Find the first available image URL
+            const imageUrl =
+              product.image_url ||
+              product.image_thumb_url ||
+              (product.images && product.images[0]) ||
+              product.image_small_url ||
+              product.image_front_url;
+
+            return {
+              code: product.code || '',
+              product_name: product.product_name || 'Unknown Product',
+              image_url: imageUrl,
+              categories: product.categories || product.categories_tags || [],
+              ingredients: product.ingredients || product.ingredients_text || [],
+              nutrition_grades: product.nutrition_grades?.toUpperCase() || 'N/A'
+            };
+          });
+
+        setProcessedFoodItems(processedFoodItems);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching food items:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchFoodItems();
+  }, [selectedCategory]);
+
+  // Sort based on the current sort type
+  useEffect(() => {
+    let array = processedFoodItems;
+    if (sortType.field === 'name') {
+      array = [...array.sort((a: any, b: any) => {
+        return sortType.order === 'asc'
+          ? a.product_name.localeCompare(b.product_name)
+          : b.product_name.localeCompare(a.product_name);
+      })];
+    } else if (sortType.field === 'nutrition') {
+      array = [...array.sort((a: any, b: any) => {
+        return sortType.order === 'asc'
+          ? a.nutrition_grades.localeCompare(b.nutrition_grades)
+          : b.nutrition_grades.localeCompare(a.nutrition_grades);
+      })];
     }
 
-    // Filter by rating
-    if (ratingFilter !== null && restaurant.rating < ratingFilter) {
-      return false;
-    }
-
-    return true;
-  });
-
-  // Sort restaurants based on selected sort option
-  const sortedRestaurants = [...filteredRestaurants].sort((a, b) => {
-    switch (sortBy) {
-      case 'rating':
-        return b.rating - a.rating;
-      case 'reviews':
-        return b.reviewCount - a.reviewCount;
-      case 'newest':
-        return b.isNew ? -1 : a.isNew ? 1 : 0;
-      default:
-        return 0;
-    }
-  });
+    setProcessedFoodItems(array);
+    setIsLoading(false);
+  }, [sortType]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -133,111 +123,65 @@ const Homepage = () => {
         <section className="container mx-auto px-6 py-12">
           <h2 className="text-2xl font-bold mb-6 animate-fade-in">Categories</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
-            {CATEGORIES.map((category, index) => (
-              <CategoryBadge
-                key={category.name}
-                category={category}
-                index={index}
-                isSelected={selectedCategory === category.name}
-                onClick={() => {
-                  setSelectedCategory(prevCat =>
-                    prevCat === category.name ? null : category.name
-                  );
-                }}
-              />
-            ))}
+            {CATEGORIES.map((category, index) => {
+
+              return (
+                <CategoryBadge
+                  key={category.name}
+                  category={category}
+                  index={index}
+                  isSelected={selectedCategory === category.name}
+                  onClick={() => {
+                    console.log('Category clicked in Homepage:', category.name);
+                    const newCategory = category.name.toLowerCase();
+                    console.log('Setting category to:', newCategory);
+                    setSelectedCategory(newCategory);
+                  }}
+                />
+              );
+            })}
           </div>
         </section>
 
-        {/* Restaurants Section */}
+        {/* Food Items Section */}
         <section className="container mx-auto px-6 py-8 pb-20">
-          <FilterSection
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            priceFilter={priceFilter}
-            setPriceFilter={setPriceFilter}
-            ratingFilter={ratingFilter}
-            setRatingFilter={setRatingFilter}
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedRestaurants.map((restaurant, index) => (
-              <RestaurantCard
-                key={restaurant.id}
-                restaurant={restaurant}
-                index={index}
-              />
-            ))}
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Food Items - {selectedCategory ? selectedCategory : 'All'}</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSortType({ field: 'name', order: sortType.field === 'name' ? (sortType.order === 'asc' ? 'desc' : 'asc') : 'asc' })}
+                className={`text-black border-2 px-4 py-2 rounded-md ${sortType.field === 'name' ? 'border-food-red text-food-red' : 'border-gray-600'}`}
+              >
+                By Name {sortType.field === 'name' && (sortType.order === 'asc' ? '(A-Z)' : '(Z-A)')}
+              </button>
+              <button
+                onClick={() => setSortType({ field: 'nutrition', order: sortType.field === 'nutrition' ? (sortType.order === 'asc' ? 'desc' : 'asc') : 'asc' })}
+                className={`text-black border-2 px-4 py-2 rounded-md ${sortType.field === 'nutrition' ? 'border-food-red text-food-red' : 'border-gray-600'}`}
+              >
+                Nutrition {sortType.field === 'nutrition' && (sortType.order === 'asc' ? '(A-E)' : '(E-A)')}
+              </button>
+            </div>
           </div>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center min-h-[50vh]">
+              <Loader className="h-8 w-8 animate-spin text-black mb-4" />
+              <p className="text-gray-600">Loading...</p>
+            </div>) :
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {processedFoodItems.map((foodItem, index) => (
+                <FoodItemCard
+                  key={foodItem.code}
+                  foodItem={foodItem}
+                  index={index}
+                />
+              ))}
+            </div>
+          }
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between">
-            <div className="mb-6 md:mb-0">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-xl font-bold">
-                  Fork <span className="text-food-red">&</span> Find
-                </span>
-              </div>
-              <p className="text-gray-400 max-w-xs">
-                Discover the best food from over 1,000 restaurants and fast delivery to your doorstep
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">About</h3>
-                <ul className="space-y-2 text-gray-400">
-                  <li><a href="#" className="hover:text-food-red transition-colors">About Us</a></li>
-                  <li><a href="#" className="hover:text-food-red transition-colors">Careers</a></li>
-                  <li><a href="#" className="hover:text-food-red transition-colors">Investors</a></li>
-                  <li><a href="#" className="hover:text-food-red transition-colors">Company Blog</a></li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Support</h3>
-                <ul className="space-y-2 text-gray-400">
-                  <li><a href="#" className="hover:text-food-red transition-colors">Contact</a></li>
-                  <li><a href="#" className="hover:text-food-red transition-colors">Help Center</a></li>
-                  <li><a href="#" className="hover:text-food-red transition-colors">Privacy</a></li>
-                  <li><a href="#" className="hover:text-food-red transition-colors">Terms</a></li>
-                </ul>
-              </div>
-
-              <div className="col-span-2 md:col-span-1">
-                <h3 className="text-lg font-semibold mb-4">Get The App</h3>
-                <div className="flex space-x-4">
-                  <a href="#" className="bg-white text-gray-900 px-4 py-2 rounded flex items-center gap-2">
-                    <span className="font-medium">iOS</span>
-                  </a>
-                  <a href="#" className="bg-white text-gray-900 px-4 py-2 rounded flex items-center gap-2">
-                    <span className="font-medium">Android</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-500">&copy; 2023 Fork & Find. All rights reserved.</p>
-            <div className="flex space-x-4 mt-4 md:mt-0">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Facebook
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Twitter
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Instagram
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

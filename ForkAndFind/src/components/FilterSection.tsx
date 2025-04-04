@@ -50,7 +50,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-4 mb-6 space-y-4 md:space-y-0 animate-fade-in">
       <div className="flex items-center">
-        <h2 className="text-xl font-semibold mr-2">Restaurants</h2>
+        <h2 className="text-xl font-semibold mr-2">Food Items</h2>
         <span className="text-gray-500 text-sm">(24 results)</span>
       </div>
 

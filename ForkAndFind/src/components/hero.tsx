@@ -16,11 +16,11 @@ const Hero: React.FC = () => {
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-3xl animate-fade-in">
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
-            Discover & Enjoy <br />
-            <span className="text-food-red">Delicious Food</span> Near You
+            Discover & Know <br />
+            <span className="text-food-red">Your Food</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Find the perfect restaurant, read reviews, view menus, and book a table all in one place.
+            Find the perfect food items, read reviews, view options, and order delicious dishes all in one place.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -28,7 +28,7 @@ const Hero: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search for restaurants, cuisines, or dishes..."
+                placeholder="Search for dishes, cuisines, or ingredients..."
                 className="pl-10 py-6 rounded-full border border-gray-300 focus:border-food-red focus:ring-1 focus:ring-food-red shadow-sm w-full"
               />
             </div>
