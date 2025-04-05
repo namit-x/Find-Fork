@@ -12,6 +12,7 @@ interface FoodItemCardProps {
     nutrition_grades: any;
   };
   index: number;
+  onClick: () => void;
 }
 
 // Helper function to safely render potentially complex values
@@ -29,15 +30,16 @@ const safeRender = (value: any): string => {
   return String(value);
 };
 
-const FoodItemCard: React.FC<FoodItemCardProps> = ({ foodItem, index }) => {
+const FoodItemCard: React.FC<FoodItemCardProps> = ({ foodItem, index, onClick }) => {
   const delayClass = `animate-delay-${(index % 5) * 100}`;
 
   return (
     <div
       className={cn(
-        "bg-white rounded-xl overflow-hidden filter-card animate-fade-in",
+        "bg-white rounded-xl overflow-hidden filter-card animate-fade-in cursor-pointer",
         delayClass
       )}
+      onClick={onClick}
     >
       <div className="relative">
         <img

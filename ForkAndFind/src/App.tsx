@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Homepage from "./pages/Homepage"
 import './App.css'
 import NotFound from "./pages/NotFound"
+import ProductDetails from "./pages/ProductDetails"
+import { SearchProvider } from "./context/SearchContext"
 
 function App() {
   const queryClient = new QueryClient()
@@ -13,17 +15,20 @@ function App() {
   return (
     <>
       <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Homepage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <SearchProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Homepage />} />
+                <Route path="/product/:code" element={<ProductDetails />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </SearchProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
     </>
   )
 }

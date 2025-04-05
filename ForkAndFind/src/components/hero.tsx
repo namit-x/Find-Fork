@@ -1,9 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { useSearch } from '../context/SearchContext';
 
 const Hero: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { setSearchName } = useSearch();
+
+  const searchProduct = async (searchQuery: string) => {
+    if (!searchQuery.trim()) return;
+    
+    if (/^\d+$/.test(searchQuery)) {
+      navigate(`/product/${searchQuery}`);
+    }
+    else {
+      setSearchName(searchQuery);
+    }
+  }
+
   return (
     <div className="relative h-[600px] flex items-center">
       <div
@@ -28,23 +45,25 @@ const Hero: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search for dishes, cuisines, or ingredients..."
+                placeholder="Search products by barcode or name..."
                 className="pl-10 py-6 rounded-full border border-gray-300 focus:border-food-red focus:ring-1 focus:ring-food-red shadow-sm w-full"
+                onChange={(e) => {setSearchQuery(e.target.value); e.target.value='';}}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    searchProduct(searchQuery);
+                  }
+                }}
+                value={searchQuery}
               />
             </div>
-            <Button className="bg-food-red hover:bg-food-red/90 text-white py-6 px-8 rounded-full shadow-md">
+            <Button
+              className="bg-food-red hover:bg-food-red/90 text-white py-6 px-8 rounded-full shadow-md"
+              onClick={() => searchProduct(searchQuery)}
+            >
               Search
             </Button>
           </div>
 
-          <div className="flex flex-wrap gap-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
-            <span className="text-sm text-gray-500">Popular searches:</span>
-            <a href="#" className="text-sm text-food-red hover:underline">Italian</a>
-            <a href="#" className="text-sm text-food-red hover:underline">Chinese</a>
-            <a href="#" className="text-sm text-food-red hover:underline">Vegetarian</a>
-            <a href="#" className="text-sm text-food-red hover:underline">Fast Food</a>
-            <a href="#" className="text-sm text-food-red hover:underline">Fine Dining</a>
-          </div>
         </div>
       </div>
     </div>

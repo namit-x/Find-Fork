@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar';
 import Hero from '../components/hero';
 import CategoryBadge from '../components/CategoryBadge';
@@ -6,6 +7,7 @@ import CategoryBadge from '../components/CategoryBadge';
 import FoodItemCard from '../components/FoodItemCard';
 import { Footer } from '../components/Footer';
 import { Loader } from 'lucide-react';
+import { useSearch } from '../context/SearchContext';
 
 const CATEGORIES = [
   { name: 'Dairies', icon: 'dairies' },
@@ -20,6 +22,8 @@ const CATEGORIES = [
 
 
 const Homepage = () => {
+  const navigate = useNavigate();
+  const { searchName } = useSearch();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortType, setSortType] = useState<{ field: 'name' | 'nutrition', order: 'asc' | 'desc' }>({ field: 'name', order: 'asc' });
@@ -32,18 +36,25 @@ const Homepage = () => {
 
         setIsLoading(true);
         let response;
-        if (!selectedCategory) {
+        if (localStorage.getItem('selectedCategory')) {
+          setSelectedCategory(localStorage.getItem('selectedCategory') as string);
+        }
+        if (!selectedCategory && !searchName) {
           response = await fetch(`https://world.openfoodfacts.org/api/v2/search.json?page_size=20`);
         }
+        else if (searchName) {
+          response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${searchName}&json=true`);
+        }
         else {
-          // console.log('Fetching for category:', selectedCategory);
           response = await fetch(`https://world.openfoodfacts.org/facets/categories/${selectedCategory}.json?page=1&page_size=20`);
         }
         const data = await response.json();
-        // console.log('API Response:', data);
+        // console.log('API Response:', data.products.length);
 
-        if (!data.products || !Array.isArray(data.products)) {
+        if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
           console.error("No products found or invalid data format!");
+          setIsLoading(false);
+          setProcessedFoodItems([]);
           return;
         }
 
@@ -89,7 +100,7 @@ const Homepage = () => {
     };
 
     fetchFoodItems();
-  }, [selectedCategory]);
+  }, [selectedCategory, searchName]);
 
   // Sort based on the current sort type
   useEffect(() => {
@@ -112,6 +123,10 @@ const Homepage = () => {
     setIsLoading(false);
   }, [sortType]);
 
+  const handleProductClick = (code: string) => {
+    navigate(`/product/${code}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -132,9 +147,8 @@ const Homepage = () => {
                   index={index}
                   isSelected={selectedCategory === category.name}
                   onClick={() => {
-                    console.log('Category clicked in Homepage:', category.name);
+                    localStorage.setItem('selectedCategory', category.name);
                     const newCategory = category.name.toLowerCase();
-                    console.log('Setting category to:', newCategory);
                     setSelectedCategory(newCategory);
                   }}
                 />
@@ -168,15 +182,32 @@ const Homepage = () => {
               <p className="text-gray-600">Loading...</p>
             </div>) :
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {processedFoodItems.map((foodItem, index) => (
-                <FoodItemCard
-                  key={foodItem.code}
-                  foodItem={foodItem}
-                  index={index}
-                />
-              ))}
-            </div>
+            processedFoodItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[30vh] text-center">
+                <p className="text-xl text-gray-600 mb-4">No food items found</p>
+                {searchName && (
+                  <p className="text-gray-500">
+                    No results matching "{searchName}". Try a different search term.
+                  </p>
+                )}
+                {!searchName && (
+                  <p className="text-gray-500">
+                    Unable to load food items. Please try selecting a different category or refresh the page.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {processedFoodItems.map((foodItem, index) => (
+                  <FoodItemCard
+                    key={foodItem.code}
+                    foodItem={foodItem}
+                    index={index}
+                    onClick={() => handleProductClick(foodItem.code)}
+                  />
+                ))}
+              </div>
+            )
           }
         </section>
       </main>

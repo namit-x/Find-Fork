@@ -14,28 +14,6 @@
 ## Features
 
 
-code
-product_name
-image_url
- 
-"categories"
-"categories_hierarchy"
-"categories_lc"
-"categories_old"
-"categories_properties"
-"categories_properties_tags"
-"categories_tags"
-"category_properties"
-
-ingredients?
-ingredients_n?
-ingredients_n_tags?
-ingredients_tags?
-
-"nutriscore_data"
-"nutriscore_grade"
-"nutriscore_score"
-"nutrition_grades"
-"nutrition_grades_tags"
+ingredients_hierarchy
 
 the data is dirty, I have to use some functions like safeRender in FoodItemCard.tsx so clean it and then store it
