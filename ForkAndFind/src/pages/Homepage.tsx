@@ -176,7 +176,6 @@ const Homepage = () => {
         }
         setIsLoadingCategories(false);
       } catch (error) {
-        console.error('Error fetching categories:', error);
         setIsLoadingCategories(false);
       }
     };
@@ -188,7 +187,6 @@ const Homepage = () => {
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
     const [target] = entries;
     if (target.isIntersecting && !isLoading && !isLoadingMore && hasMore) {
-      console.log("Infinite scroll triggered");
       setPage(prevPage => prevPage + 1);
     }
   }, [isLoading, isLoadingMore, hasMore]);
@@ -258,12 +256,10 @@ const Homepage = () => {
         const isCategoryFiltering = !!selectedCategory;
         const apiUrl = buildApiUrl(page, isSearching, isCategoryFiltering);
         
-        console.log(`Fetching page ${page} of food items...`);
         const response = await fetch(apiUrl);
         const data = await response.json();
 
         if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
-          console.log('No more items to load');
           setHasMore(false);
           setIsLoadingMore(false);
           return;
@@ -273,7 +269,6 @@ const Homepage = () => {
         setProcessedFoodItems(prevItems => [...prevItems, ...newItems]);
         setIsLoadingMore(false);
       } catch (error) {
-        console.error('Error fetching more food items:', error);
         setIsLoadingMore(false);
         setHasMore(false);
       }
@@ -305,12 +300,10 @@ const Homepage = () => {
         const isCategoryFiltering = !!selectedCategory;
         const apiUrl = buildApiUrl(1, isSearching, isCategoryFiltering);
         
-        console.log('Fetching initial food items...');
         const response = await fetch(apiUrl);
         const data = await response.json();
 
         if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
-          console.error("No products found or invalid data format!");
           setIsLoading(false);
           setProcessedFoodItems([]);
           setHasMore(false);
@@ -322,7 +315,6 @@ const Homepage = () => {
         setPage(2); // Prepare for next page fetch
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching food items:', error);
         setIsLoading(false);
         setProcessedFoodItems([]);
         setHasMore(false);

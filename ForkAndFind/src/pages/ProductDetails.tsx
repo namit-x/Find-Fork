@@ -101,7 +101,6 @@ const ProductDetail: React.FC = () => {
         setProduct(productData);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching product:', error);
         setError('Failed to load product data');
         setLoading(false);
       }
