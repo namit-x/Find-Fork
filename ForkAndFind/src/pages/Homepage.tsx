@@ -21,6 +21,11 @@ const CATEGORIES = [
   { name: 'Desserts', icon: 'dessert' },
 ];
 
+// API constants
+const API_BASE_URL = 'https://world.openfoodfacts.org';
+const PAGE_SIZE = 20;
+const FIELDS_PARAM = 'fields=product_name,code,image_url,categories_tags,nutrition_grades,ingredients_text';
+
 // Interface for API categories
 interface ApiCategory {
   id: string;
@@ -34,6 +39,16 @@ interface ProcessedCategory {
   displayName: string;  // Cleaned up name for display
   category: string;     // Original ID for API calls
   products: number;     // Number of products
+}
+
+// Interface for food item
+interface FoodItem {
+  code: string;
+  product_name: string;
+  image_url: string;
+  categories: any;
+  ingredients: any;
+  nutrition_grades: string;
 }
 
 // Skeleton card component for loading state
@@ -58,7 +73,7 @@ const Homepage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCategoryDisplay, setSelectedCategoryDisplay] = useState<string | null>(null);
   const [sortType, setSortType] = useState<{ field: 'name' | 'nutrition', order: 'asc' | 'desc' }>({ field: 'name', order: 'asc' });
-  const [processedFoodItems, setProcessedFoodItems] = useState<any[]>([]);
+  const [processedFoodItems, setProcessedFoodItems] = useState<FoodItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -83,12 +98,56 @@ const Homepage = () => {
     return displayName;
   };
 
+  // Helper function to process food items from API response
+  const processFoodItems = (products: any[]): FoodItem[] => {
+    return products
+      .filter((product: any) => {
+        if (!product || !product.code || !product.product_name) return false;
+
+        return !!(
+          product.image_url ||
+          product.image_thumb_url ||
+          (product.images && product.images[0]) ||
+          product.image_small_url ||
+          product.image_front_url
+        );
+      })
+      .map((product: any) => {
+        const imageUrl =
+          product.image_url ||
+          product.image_thumb_url ||
+          (product.images && product.images[0]) ||
+          product.image_small_url ||
+          product.image_front_url;
+
+        return {
+          code: product.code || '',
+          product_name: product.product_name || 'Unknown Product',
+          image_url: imageUrl,
+          categories: product.categories || product.categories_tags || [],
+          ingredients: product.ingredients || product.ingredients_text || [],
+          nutrition_grades: product.nutrition_grades?.toUpperCase() || 'N/A'
+        };
+      });
+  };
+
+  // Helper function to build the API URL based on current filters
+  const buildApiUrl = (pageNum: number, isSearch: boolean, isCategoryFilter: boolean): string => {
+    if (isSearch) {
+      return `${API_BASE_URL}/cgi/search.pl?search_terms=${searchName}&json=true&page=${pageNum}&page_size=${PAGE_SIZE}`;
+    } else if (isCategoryFilter) {
+      return `${API_BASE_URL}/facets/categories/${selectedCategory}.json?page=${pageNum}&page_size=${PAGE_SIZE}`;
+    } else {
+      return `${API_BASE_URL}/api/v2/search.json?sort_by=random&${FIELDS_PARAM}&page=${pageNum}&page_size=${PAGE_SIZE}`;
+    }
+  };
+
   // Fetch categories from OpenFoodFacts API
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setIsLoadingCategories(true);
-        const response = await fetch('https://world.openfoodfacts.org/facets/categories.json');
+        const response = await fetch(`${API_BASE_URL}/facets/categories.json`);
         const data = await response.json();
 
         if (data && data.tags && Array.isArray(data.tags)) {
@@ -125,6 +184,7 @@ const Homepage = () => {
     fetchCategories();
   }, []);
 
+  // Manage infinite scroll observer
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
     const [target] = entries;
     if (target.isIntersecting && !isLoading && !isLoadingMore && hasMore) {
@@ -169,33 +229,37 @@ const Homepage = () => {
     setHasMore(true);
   }, [selectedCategory, searchName]);
 
-  // Fetch more data when page changes
+  // Restore saved category from localStorage
+  useEffect(() => {
+    if (localStorage.getItem('selectedCategory') && !selectedCategory && !searchName) {
+      const savedCategory = localStorage.getItem('selectedCategory') as string;
+      setSelectedCategory(savedCategory);
+      
+      // Also restore the display name if available
+      const savedCategoryDisplay = localStorage.getItem('selectedCategoryDisplay');
+      if (savedCategoryDisplay) {
+        setSelectedCategoryDisplay(savedCategoryDisplay);
+      } else {
+        // If no display name is saved, generate one from the category ID
+        setSelectedCategoryDisplay(cleanCategoryName(savedCategory));
+      }
+    }
+  }, [selectedCategory, searchName]);
+
+  // Fetch more data when page changes (infinite scroll)
   useEffect(() => {
     const fetchMoreItems = async () => {
       if (page === 1) return; // Initial data load is handled by the main fetch
 
       try {
         setIsLoadingMore(true);
-        let response;
-
-        if (localStorage.getItem('selectedCategory') && !selectedCategory && !searchName) {
-          const savedCategory = localStorage.getItem('selectedCategory') as string;
-          setSelectedCategory(savedCategory);
-        }
-
-        if (!selectedCategory && !searchName) {
-          console.log(`Fetching page ${page} of all food items`);
-          response = await fetch(`https://world.openfoodfacts.org/api/v2/search.json?sort_by=random&fields=product_name,code,image_url,categories_tags,nutrition_grades,ingredients_text&page=${page}&page_size=20`);
-        }
-        else if (searchName) {
-          console.log(`Fetching page ${page} of food items for search: ${searchName}`);
-          response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${searchName}&json=true&page=${page}&page_size=20`);
-        }
-        else {
-          console.log(`Fetching page ${page} of food items for category: ${selectedCategory}`);
-          response = await fetch(`https://world.openfoodfacts.org/facets/categories/${selectedCategory}.json?page=${page}&page_size=20`);
-        }
-
+        
+        const isSearching = !!searchName;
+        const isCategoryFiltering = !!selectedCategory;
+        const apiUrl = buildApiUrl(page, isSearching, isCategoryFiltering);
+        
+        console.log(`Fetching page ${page} of food items...`);
+        const response = await fetch(apiUrl);
         const data = await response.json();
 
         if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
@@ -205,36 +269,7 @@ const Homepage = () => {
           return;
         }
 
-        let newItems = data.products
-          .filter((product: any) => {
-            if (!product || !product.code || !product.product_name) return false;
-
-            return !!(
-              product.image_url ||
-              product.image_thumb_url ||
-              (product.images && product.images[0]) ||
-              product.image_small_url ||
-              product.image_front_url
-            );
-          })
-          .map((product: any) => {
-            const imageUrl =
-              product.image_url ||
-              product.image_thumb_url ||
-              (product.images && product.images[0]) ||
-              product.image_small_url ||
-              product.image_front_url;
-
-            return {
-              code: product.code || '',
-              product_name: product.product_name || 'Unknown Product',
-              image_url: imageUrl,
-              categories: product.categories || product.categories_tags || [],
-              ingredients: product.ingredients || product.ingredients_text || [],
-              nutrition_grades: product.nutrition_grades?.toUpperCase() || 'N/A'
-            };
-          });
-
+        const newItems = processFoodItems(data.products);
         setProcessedFoodItems(prevItems => [...prevItems, ...newItems]);
         setIsLoadingMore(false);
       } catch (error) {
@@ -249,55 +284,29 @@ const Homepage = () => {
     }
   }, [page, selectedCategory, searchName]);
 
+  // Initial data fetch when search or category selection changes
   useEffect(() => {
     const fetchFoodItems = async () => {
       try {
         setIsLoading(true);
         setHasMore(true);
-        let response;
-
-        // Check if we have a saved category from localStorage and no current category
-        if (localStorage.getItem('selectedCategory') && !selectedCategory && !searchName) {
-          const savedCategory = localStorage.getItem('selectedCategory') as string;
-          setSelectedCategory(savedCategory);
-
-          // Also restore the display name if available
-          const savedCategoryDisplay = localStorage.getItem('selectedCategoryDisplay');
-          if (savedCategoryDisplay) {
-            setSelectedCategoryDisplay(savedCategoryDisplay);
-          } else {
-            // If no display name is saved, generate one from the category ID
-            setSelectedCategoryDisplay(cleanCategoryName(savedCategory));
-          }
+        
+        // Handle mutual exclusivity of search and category
+        if (searchName && selectedCategory) {
+          setSelectedCategory(null);
+          setSelectedCategoryDisplay(null);
+          localStorage.removeItem('selectedCategory');
+          localStorage.removeItem('selectedCategoryDisplay');
+        } else if (!searchName && selectedCategory) {
+          // No need to clear the search as it's already handled elsewhere
         }
-
-        if (!selectedCategory && !searchName) {
-          console.log('Fetching all food items');
-          response = await fetch(`https://world.openfoodfacts.org/api/v2/search.json?sort_by=random&fields=product_name,code,image_url,categories_tags,nutrition_grades,ingredients_text&page=1&page_size=20`);
-          setPage(2);
-        }
-        else if (searchName) {
-          console.log(`Fetching food items for search: ${searchName}`);
-          // Ensure category is cleared when searching
-          if (selectedCategory) {
-            setSelectedCategory(null);
-            setSelectedCategoryDisplay(null);
-            localStorage.removeItem('selectedCategory');
-            localStorage.removeItem('selectedCategoryDisplay');
-          }
-          response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${searchName}&json=true&page=1&page_size=20`);
-          setPage(2);
-        }
-        else {
-          console.log(`Fetching food items for category: ${selectedCategory}`);
-          // Clear search when using category
-          if (searchName) {
-            setSearchName('');
-          }
-          response = await fetch(`https://world.openfoodfacts.org/facets/categories/${selectedCategory}.json?page=1&page_size=20`);
-          setPage(2); // Prepare for next page fetch
-        }
-
+        
+        const isSearching = !!searchName;
+        const isCategoryFiltering = !!selectedCategory;
+        const apiUrl = buildApiUrl(1, isSearching, isCategoryFiltering);
+        
+        console.log('Fetching initial food items...');
+        const response = await fetch(apiUrl);
         const data = await response.json();
 
         if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
@@ -308,37 +317,9 @@ const Homepage = () => {
           return;
         }
 
-        let processedItems = data.products
-          .filter((product: any) => {
-            if (!product || !product.code || !product.product_name) return false;
-
-            return !!(
-              product.image_url ||
-              product.image_thumb_url ||
-              (product.images && product.images[0]) ||
-              product.image_small_url ||
-              product.image_front_url
-            );
-          })
-          .map((product: any) => {
-            const imageUrl =
-              product.image_url ||
-              product.image_thumb_url ||
-              (product.images && product.images[0]) ||
-              product.image_small_url ||
-              product.image_front_url;
-
-            return {
-              code: product.code || '',
-              product_name: product.product_name || 'Unknown Product',
-              image_url: imageUrl,
-              categories: product.categories || product.categories_tags || [],
-              ingredients: product.ingredients || product.ingredients_text || [],
-              nutrition_grades: product.nutrition_grades?.toUpperCase() || 'N/A'
-            };
-          });
-
+        const processedItems = processFoodItems(data.products);
         setProcessedFoodItems(processedItems);
+        setPage(2); // Prepare for next page fetch
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching food items:', error);
@@ -349,30 +330,36 @@ const Homepage = () => {
     };
 
     fetchFoodItems();
-  }, [selectedCategory, searchName, setSearchName]);
+  }, [selectedCategory, searchName]);
 
   // Sort based on the current sort type
   useEffect(() => {
     if (processedFoodItems.length > 0) {
-      let array = processedFoodItems;
-      if (sortType.field === 'name') {
-        array = [...array.sort((a: any, b: any) => {
-          return sortType.order === 'asc'
-            ? a.product_name.localeCompare(b.product_name)
-            : b.product_name.localeCompare(a.product_name);
-        })];
-      } else if (sortType.field === 'nutrition') {
-        array = [...array.sort((a: any, b: any) => {
-          return sortType.order === 'asc'
-            ? a.nutrition_grades.localeCompare(b.nutrition_grades)
-            : b.nutrition_grades.localeCompare(a.nutrition_grades);
-        })];
-      }
-
-      setProcessedFoodItems(array);
+      const sortFoodItems = () => {
+        let sortedArray = [...processedFoodItems];
+        
+        if (sortType.field === 'name') {
+          sortedArray.sort((a, b) => {
+            return sortType.order === 'asc'
+              ? a.product_name.localeCompare(b.product_name)
+              : b.product_name.localeCompare(a.product_name);
+          });
+        } else if (sortType.field === 'nutrition') {
+          sortedArray.sort((a, b) => {
+            return sortType.order === 'asc'
+              ? a.nutrition_grades.localeCompare(b.nutrition_grades)
+              : b.nutrition_grades.localeCompare(a.nutrition_grades);
+          });
+        }
+        
+        setProcessedFoodItems(sortedArray);
+      };
+      
+      sortFoodItems();
     }
   }, [sortType]);
 
+  // Event handlers
   const handleProductClick = (code: string) => {
     navigate(`/product/${code}`);
   };
@@ -389,7 +376,6 @@ const Homepage = () => {
     setIsDropdownOpen(false);
   };
 
-  // Category select for predefined categories
   const handlePredefinedCategorySelect = (category: string) => {
     // Clear search when selecting a category
     setSearchName('');
@@ -404,6 +390,7 @@ const Homepage = () => {
     setSelectedCategoryDisplay(displayName);
   };
 
+  // Render components
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -415,19 +402,15 @@ const Homepage = () => {
         <section className="container mx-auto px-6 py-12">
           <h2 className="text-2xl font-bold mb-6 animate-fade-in">Categories</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
-            {CATEGORIES.map((category, index) => {
-              return (
-                <CategoryBadge
-                  key={category.name}
-                  category={category}
-                  index={index}
-                  isSelected={selectedCategory === category.name.toLowerCase()}
-                  onClick={() => {
-                    handlePredefinedCategorySelect(category.name);
-                  }}
-                />
-              );
-            })}
+            {CATEGORIES.map((category, index) => (
+              <CategoryBadge
+                key={category.name}
+                category={category}
+                index={index}
+                isSelected={selectedCategory === category.name.toLowerCase()}
+                onClick={() => handlePredefinedCategorySelect(category.name)}
+              />
+            ))}
 
             {/* More Categories Dropdown */}
             <div
