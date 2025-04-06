@@ -97,6 +97,14 @@ npm install
 npm run dev
 ```
 
+Just in case you are seeing an error:
+![Running scripts are disabled on this system](/ForkAndFind/public/ErrorFile.jpg)
+then you can run
+```bash
+powershell -ExecutionPolicy Bypass -Command "npm install"
+powershell -ExecutionPolicy Bypass -Command "npm run dev"
+```
+
 The app will be running at [http://localhost:5173](http://localhost:5173)
 
 
