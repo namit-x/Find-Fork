@@ -55,7 +55,7 @@
 
 If you encounter an error like:
 
-![ERR_CONNECTION_TIMED_OUT](/public/image.png)
+![ERR_CONNECTION_TIMED_OUT](/ForkAndFind/public/image.png)
 
 It may be due to OpenFoodFacts rate-limiting or IP blocks. Here’s what you can do:
 - You can change the port inside vite.config.ts (i.e. 5173 to 4322)
