@@ -17,3 +17,9 @@
 ingredients_hierarchy
 
 the data is dirty, I have to use some functions like safeRender in FoodItemCard.tsx so clean it and then store it
+
+only included categories which have more than 10000 products, assuming those are the most relevant.
+
+optimized data fetching by selecting the necessary fields at the source end only, this improves performance and reduces latency
+
+filtering the data recieving from the api, not showing the data which lacks basic information, such as barcode, product name, image,

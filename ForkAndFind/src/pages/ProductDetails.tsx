@@ -6,7 +6,6 @@ import { Heart, Tag, ChevronLeft, Loader, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import Navbar from '../components/navbar';
 
-
 // Type for product data
 interface ProductData {
   code: string;
@@ -123,10 +122,10 @@ const ProductDetail: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="container mx-auto px-6 py-20">
+        <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">
           <div className="flex flex-col items-center justify-center">
-            <Loader className="h-12 w-12 animate-spin text-food-red mb-4" />
-            <p className="text-xl font-medium">Loading product details...</p>
+            <Loader className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-food-red mb-4" />
+            <p className="text-lg sm:text-xl font-medium">Loading product details...</p>
           </div>
         </div>
       </div>
@@ -137,10 +136,10 @@ const ProductDetail: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="container mx-auto px-6 py-20">
+        <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">
           <div className="flex flex-col items-center justify-center">
-            <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
-            <p className="text-gray-600 mb-6">{error || "The product you're looking for doesn't exist or has been removed."}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-center">Product Not Found</h1>
+            <p className="text-gray-600 mb-5 sm:mb-6 text-center">{error || "The product you're looking for doesn't exist or has been removed."}</p>
             <Link to="/">
               <Button>Back to Home</Button>
             </Link>
@@ -153,34 +152,37 @@ const ProductDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main className="container mx-auto px-6 pt-24 pb-12">
-        <div className="mb-6">
+      <main className="container mx-auto px-4 sm:px-6 pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12">
+        <div className="mb-4 sm:mb-6">
           <Link to="/" className="inline-flex items-center text-gray-600 hover:text-food-red transition-colors">
             <ChevronLeft className="h-4 w-4 mr-1" />
             <span>Back to Products</span>
           </Link>
         </div>
-
-        <div className="grid md:grid-cols-2 gap-8 animate-fade-in">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 animate-fade-in">
           {/* Product Image */}
-          <div className="rounded-xl overflow-hidden shadow-lg">
-            <img
-              src={product.image_url}
+          <div className="rounded-xl overflow-hidden shadow-lg h-64 sm:h-80 md:h-auto">
+            <img 
+              src={product.image_url || 'https://placehold.co/400x300/e2e8f0/64748b?text=No+Image'}
               alt={product.product_name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain bg-white p-2"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://placehold.co/400x300/e2e8f0/64748b?text=No+Image';
+              }}
             />
           </div>
-
+          
           {/* Product Info */}
           <div>
-            <div className="flex items-start justify-between mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">{product.product_name}</h1>
-              <Button variant="outline" size="icon" className="rounded-full">
+            <div className="flex items-start justify-between mb-2 flex-wrap sm:flex-nowrap gap-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{product.product_name}</h1>
+              <Button variant="outline" size="icon" className="rounded-full shrink-0">
                 <Heart className="h-5 w-5 text-gray-600" />
               </Button>
             </div>
-
-            <div className="flex items-center space-x-3 mb-4">
+            
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <Badge variant="secondary" className="flex items-center">
                 <Tag className="h-3 w-3 mr-1" />
                 {product.categories.split(',')[0]}
@@ -192,16 +194,16 @@ const ProductDetail: React.FC = () => {
 
             {/* Product Code */}
             <Card className="mb-4">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
+              <CardContent className="p-3 sm:p-4 flex items-center justify-between flex-wrap sm:flex-nowrap gap-2">
+                <div className="w-full sm:w-auto">
                   <h3 className="text-sm font-semibold mb-1">Product Code</h3>
-                  <p className="text-base font-mono">{product.code}</p>
+                  <p className="text-sm sm:text-base font-mono break-all">{product.code}</p>
                 </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={copyCodeToClipboard}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 ml-auto"
                 >
                   {copied ? (
                     <>
@@ -215,46 +217,46 @@ const ProductDetail: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
-
+            
             {/* Labels */}
             {product.labels.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-semibold text-gray-700 mb-2">Labels</h3>
-                <div className="flex flex-wrap gap-2">
-                  {product.labels.map((label, index) => (
-                    <Badge key={index} className={`${getLabelColor(label)} hover:cursor-default`}>
-                      {label}
-                    </Badge>
-                  ))}
-                </div>
+            <div className="mb-5 sm:mb-6">
+              <h3 className="font-semibold text-gray-700 mb-2">Labels</h3>
+              <div className="flex flex-wrap gap-2">
+                {product.labels.map((label, index) => (
+                  <Badge key={index} className={`${getLabelColor(label)} hover:cursor-default`}>
+                    {label}
+                  </Badge>
+                ))}
               </div>
+            </div>
             )}
-
+            
             {/* Ingredients */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Ingredients</CardTitle>
+            <Card className="mb-5 sm:mb-6">
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-base sm:text-lg">Ingredients</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-700">{product.ingredients_text}</p>
+              <CardContent className="p-4 pt-0">
+                <p className="text-sm sm:text-base text-gray-700">{product.ingredients_text}</p>
               </CardContent>
             </Card>
-
+            
             {/* Nutritional Values */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Nutritional Values</CardTitle>
+              <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-base sm:text-lg">Nutritional Values</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-y-3">
+              <CardContent className="p-4 pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3">
                   {Object.entries(product.nutriments)
                     .filter(([key]) =>
                       ['energy', 'fat', 'saturated-fat', 'carbohydrates', 'sugars', 'proteins', 'salt', 'fiber'].includes(key)
                     )
                     .map(([key, value]) => (
-                      <div key={key} className="flex justify-between pr-4">
-                        <span className="text-gray-600 capitalize">{key.replace(/-/g, ' ')}</span>
-                        <span className="font-medium">{typeof value === 'number' ? `${value}${product.nutriments[`${key}_unit`] || 'g'}` : value}</span>
+                      <div key={key} className="flex justify-between pr-4 gap-2">
+                        <span className="text-gray-600 capitalize text-sm sm:text-base">{key.replace(/-/g, ' ')}</span>
+                        <span className="font-medium text-sm sm:text-base">{typeof value === 'number' ? `${value}${product.nutriments[`${key}_unit`] || 'g'}` : value}</span>
                       </div>
                     ))}
                 </div>
@@ -263,16 +265,16 @@ const ProductDetail: React.FC = () => {
 
             {/* Nutrient Levels */}
             {Object.keys(product.nutrient_levels).length > 0 && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="text-lg">Nutrient Levels</CardTitle>
+              <Card className="mt-5 sm:mt-6">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-base sm:text-lg">Nutrient Levels</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-y-3">
+                <CardContent className="p-4 pt-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3">
                     {Object.entries(product.nutrient_levels).map(([key, value]) => (
-                      <div key={key} className="flex justify-between pr-4">
-                        <span className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}</span>
-                        <span className="font-medium capitalize">{value}</span>
+                      <div key={key} className="flex justify-between pr-4 gap-2">
+                        <span className="text-gray-600 capitalize text-sm sm:text-base">{key.replace(/_/g, ' ')}</span>
+                        <span className="font-medium capitalize text-sm sm:text-base">{value}</span>
                       </div>
                     ))}
                   </div>
