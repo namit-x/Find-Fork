@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar';
 import Hero from '../components/hero';
 import CategoryBadge from '../components/CategoryBadge';
-// import FilterSection from '../components/FilterSection';
 import FoodItemCard from '../components/FoodItemCard';
 import { Footer } from '../components/Footer';
 import { Loader, ChevronDown, ChevronUp } from 'lucide-react';
@@ -22,7 +21,7 @@ const CATEGORIES = [
 ];
 
 // API constants
-const API_BASE_URL = 'https://world.openfoodfacts.org';
+const API_BASE_URL = 'https://world.openfoodfacts.org/api/v2';
 const PAGE_SIZE = 20;
 const FIELDS_PARAM = 'fields=product_name,code,image_url,categories_tags,nutrition_grades,ingredients_text';
 
@@ -131,17 +130,16 @@ const Homepage = () => {
       });
   };
 
-  // Helper function to build the API URL based on current filters
-  const buildApiUrl = (pageNum: number, isSearch: boolean, isCategoryFilter: boolean): string => {
-    if (isSearch) {
-      return `${API_BASE_URL}/cgi/search.pl?search_terms=${searchName}&json=true&page=${pageNum}&page_size=${PAGE_SIZE}`;
-    } else if (isCategoryFilter) {
-      return `${API_BASE_URL}/facets/categories/${selectedCategory}.json?page=${pageNum}&page_size=${PAGE_SIZE}`;
-    } else {
-      return `${API_BASE_URL}/api/v2/search.json?sort_by=random&${FIELDS_PARAM}&page=${pageNum}&page_size=${PAGE_SIZE}`;
-    }
-  };
-
+// Helper function to build the API URL based on current filters
+const buildApiUrl = (pageNum: number, isSearch: boolean, isCategoryFilter: boolean): string => {
+  if (isSearch && searchName) {
+    return `${API_BASE_URL}/search?${FIELDS_PARAM}&page=${pageNum}&page_size=${PAGE_SIZE}&sort_by=popularity&search_terms=${encodeURIComponent(searchName)}`;
+  } else if (isCategoryFilter && selectedCategory) {
+    return `${API_BASE_URL}/search?${FIELDS_PARAM}&page=${pageNum}&page_size=${PAGE_SIZE}&categories_tags=${encodeURIComponent(selectedCategory)}`;
+  } else {
+    return `${API_BASE_URL}/search?${FIELDS_PARAM}&page=${pageNum}&page_size=${PAGE_SIZE}&sort_by=random`;
+  }
+};
   // Fetch categories from OpenFoodFacts API
   useEffect(() => {
     const fetchCategories = async () => {
@@ -232,7 +230,7 @@ const Homepage = () => {
     if (localStorage.getItem('selectedCategory') && !selectedCategory && !searchName) {
       const savedCategory = localStorage.getItem('selectedCategory') as string;
       setSelectedCategory(savedCategory);
-      
+
       // Also restore the display name if available
       const savedCategoryDisplay = localStorage.getItem('selectedCategoryDisplay');
       if (savedCategoryDisplay) {
@@ -251,11 +249,11 @@ const Homepage = () => {
 
       try {
         setIsLoadingMore(true);
-        
+
         const isSearching = !!searchName;
         const isCategoryFiltering = !!selectedCategory;
         const apiUrl = buildApiUrl(page, isSearching, isCategoryFiltering);
-        
+
         const response = await fetch(apiUrl);
         const data = await response.json();
 
@@ -284,8 +282,8 @@ const Homepage = () => {
     const fetchFoodItems = async () => {
       try {
         setIsLoading(true);
+        // console.log("category: ", selectedCategory)
         setHasMore(true);
-        
         // Handle mutual exclusivity of search and category
         if (searchName && selectedCategory) {
           setSelectedCategory(null);
@@ -295,11 +293,12 @@ const Homepage = () => {
         } else if (!searchName && selectedCategory) {
           // No need to clear the search as it's already handled elsewhere
         }
-        
+
         const isSearching = !!searchName;
         const isCategoryFiltering = !!selectedCategory;
         const apiUrl = buildApiUrl(1, isSearching, isCategoryFiltering);
-        
+        // console.log("URL: ", apiUrl);
+
         const response = await fetch(apiUrl);
         const data = await response.json();
 
@@ -329,7 +328,7 @@ const Homepage = () => {
     if (processedFoodItems.length > 0) {
       const sortFoodItems = () => {
         let sortedArray = [...processedFoodItems];
-        
+
         if (sortType.field === 'name') {
           sortedArray.sort((a, b) => {
             return sortType.order === 'asc'
@@ -343,10 +342,10 @@ const Homepage = () => {
               : b.nutrition_grades.localeCompare(a.nutrition_grades);
           });
         }
-        
+
         setProcessedFoodItems(sortedArray);
       };
-      
+
       sortFoodItems();
     }
   }, [sortType]);
@@ -491,61 +490,62 @@ const Homepage = () => {
               {[...Array(6)].map((_, index) => (
                 <FoodItemCardSkeleton key={index} />
               ))}
-            </div>
-          ) : processedFoodItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[30vh] text-center">
-              <p className="text-xl text-gray-600 mb-4">No food items found</p>
-              {searchName && (
-                <p className="text-gray-500">
-                  No results matching "{searchName}". Try a different search term.
-                </p>
-              )}
-              {!searchName && (
-                <p className="text-gray-500">
-                  Unable to load food items. Please try selecting a different category or refresh the page.
-                </p>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {processedFoodItems.map((foodItem, index) => (
-                  <FoodItemCard
-                    key={`${foodItem.code}-${index}`}
-                    foodItem={foodItem}
-                    index={index}
-                    onClick={() => handleProductClick(foodItem.code)}
-                  />
-                ))}
-
-                {/* Add skeleton loaders when loading more items */}
-                {isLoadingMore && (
-                  <>
-                    {[...Array(3)].map((_, index) => (
-                      <FoodItemCardSkeleton key={`more-${index}`} />
-                    ))}
-                  </>
+            </div>)
+            :
+            processedFoodItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center min-h-[30vh] text-center">
+                <p className="text-xl text-gray-600 mb-4">No food items found</p>
+                {searchName && (
+                  <p className="text-gray-500">
+                    No results matching "{searchName}". Try a different search term.
+                  </p>
+                )}
+                {!searchName && (
+                  <p className="text-gray-500">
+                    Unable to load food items. Please try selecting a different category or refresh the page.
+                  </p>
                 )}
               </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {processedFoodItems.map((foodItem, index) => (
+                    <FoodItemCard
+                      key={`${foodItem.code}-${index}`}
+                      foodItem={foodItem}
+                      index={index}
+                      onClick={() => handleProductClick(foodItem.code)}
+                    />
+                  ))}
 
-              {/* Sentinel Div */}
-              <div
-                ref={loadingRef}
-                className="w-full h-16 flex items-center justify-center my-4"
-              >
-                {isLoadingMore ? (
-                  <div className="flex items-center">
-                    <Loader className="h-5 w-5 animate-spin text-black mr-2" />
-                    <p className="text-gray-600">Loading more items...</p>
-                  </div>
-                ) : hasMore ? (
-                  <p className="text-gray-500 text-sm">Scroll for more items</p>
-                ) : (
-                  <p className="text-gray-500 text-sm">No more items to load</p>
-                )}
-              </div>
-            </>
-          )}
+                  {/* Add skeleton loaders when loading more items */}
+                  {isLoadingMore && (
+                    <>
+                      {[...Array(3)].map((_, index) => (
+                        <FoodItemCardSkeleton key={`more-${index}`} />
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                {/* Sentinel Div */}
+                <div
+                  ref={loadingRef}
+                  className="w-full h-16 flex items-center justify-center my-4"
+                >
+                  {isLoadingMore ? (
+                    <div className="flex items-center">
+                      <Loader className="h-5 w-5 animate-spin text-black mr-2" />
+                      <p className="text-gray-600">Loading more items...</p>
+                    </div>
+                  ) : hasMore ? (
+                    <p className="text-gray-500 text-sm">Scroll for more items</p>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No more items to load</p>
+                  )}
+                </div>
+              </>
+            )}
         </section>
       </main>
 
