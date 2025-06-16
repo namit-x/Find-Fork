@@ -38,11 +38,11 @@
 
 | Home Page                             | Product Info                           |
 |--------------------------------------|----------------------------------------|
-| ![Home](./public/HomePage.png)       | ![Info](./public/ProductInfo.png)      |
+| ![Home](./ForkAndFind/public/HomePage.png)       | ![Info](./ForkAndFind/public/ProductInfo.png)      |
 
 | Fetched Items                         | Cakes Category                         |
 |--------------------------------------|----------------------------------------|
-| ![Items](./public/FetchedItems.png)  | ![Cakes](./public/Cakes.png)           |
+| ![Items](./ForkAndFind/public/FetchedItems.png)  | ![Cakes](./ForkAndFind/public/Cakes.png)           |
 
 > 💡 *Each section dynamically loads based on user input — with nutrition info, images, and smart filtering baked in.*
 
@@ -74,7 +74,7 @@
 
 If you see:
 
-![ERR_CONNECTION_TIMED_OUT](/public/image.png)
+![ERR_CONNECTION_TIMED_OUT](/ForkAndFind/public/Error.png)
 
 It may be due to OpenFoodFacts rate-limiting or IP blocks. Here’s what you can do:
 - You can change the port inside vite.config.ts (i.e. 5173 to 4322)
