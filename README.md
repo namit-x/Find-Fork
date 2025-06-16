@@ -34,6 +34,20 @@
 
 ---
 
+## 🖼️ Project Screenshots
+
+| Home Page                             | Product Info                           |
+|--------------------------------------|----------------------------------------|
+| ![Home](./public/HomePage.png)       | ![Info](./public/ProductInfo.png)      |
+
+| Fetched Items                         | Cakes Category                         |
+|--------------------------------------|----------------------------------------|
+| ![Items](./public/FetchedItems.png)  | ![Cakes](./public/Cakes.png)           |
+
+> 💡 *Each section dynamically loads based on user input — with nutrition info, images, and smart filtering baked in.*
+
+---
+
 ## ⚙️ Tech Stack Summary
 
 | Tool             | Description                                                     |
