@@ -1,59 +1,64 @@
-# **Fork & Find**
+# 🥄🍴 Fork & Find
 
-**Fork & Find** is a powerful food product explorer built on top of the [OpenFoodFacts API](https://world.openfoodfacts.org/), enabling users to search, filter, and explore global food product data with ease. It combines a high-performance tech stack with clean, responsive UI/UX design to deliver rich product insights in real-time.
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-0EA5E9?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Radix UI](https://img.shields.io/badge/Radix_UI-000000?style=for-the-badge&logo=radix-ui&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
+![Lucide Icons](https://img.shields.io/badge/Lucide_Icons-121212?style=for-the-badge&logo=lucide&logoColor=white)
+
+---
+
+**Fork & Find** is a powerful food product explorer built on top of the [OpenFoodFacts API](https://world.openfoodfacts.org/). It allows users to search, filter, and explore global food product data with ease. Clean UI, fast responses, and real-time insights — it’s data discovery done right.
 
 ---
 
 ## 🚀 Features
 
-- **Search & Explore**: Quickly search for food products by name or barcode.
-- **Category Filtering**: Navigate easily through food categories with over **10,000+ products**, focusing only on the most relevant segments.
-- **Sort by Preference**: Sort product listings by name (A-Z, Z-A) and nutrition grade (asc/desc).
-- **Detailed Product View**: Dive deep into any product’s:
-  - Image & category
-  - Ingredients
-  - Nutrition grade (A to E)
-  - Nutrition facts (energy, fat, carbs, protein, etc.)
-  - Labels (vegan, gluten-free, etc.)
-- **Pagination**: Infinite scrolling for seamless browsing.
-- **Barcode Search**: Enter barcodes to retrieve product details instantly.
-- **Data Validation & Cleanup**: Only showing the products which has key info like name, image, or barcode.
-- **Performance-Optimized API Calls**:
-  - Only fetches essential fields to reduce latency. (cannot able to apply it everywhere (cuz of API limitations) but where ever it was possible I did)
-  - Filters at the source to minimize payload size.
-- **Robust Error Handling**: Defensive programming techniques like `safeRender()` ensure UI reliability even when working with inconsistent API data.
-- **Responsive Design**: Mobile-first and fully responsive across devices.
+- 🔍 **Search & Explore**: Find products by name or barcode.
+- 🧠 **Category Filtering**: Focus on meaningful categories with **10,000+ products**.
+- 📊 **Sorting**: Sort alphabetically and by nutrition grade (A–E).
+- 📦 **Detailed Product View**:
+  - Product image, ingredients, and nutrition breakdown
+  - Labels like *vegan*, *gluten-free*, etc.
+- 🔁 **Infinite Scrolling**: For seamless exploration.
+- 🔢 **Barcode Search**: Search with GTIN barcodes.
+- 🧹 **Data Cleanup**: Only products with valid name/image/barcode are shown.
+- ⚡ **Optimized Fetching**:
+  - Minimal payload
+  - Partial field queries
+- 🛡 **Robust Error Handling**:
+  - Safe rendering using `safeRender()`
+- 📱 **Responsive UI**: Fully mobile-friendly.
 
 ---
 
-## ⚙️ Tech Stack
+## ⚙️ Tech Stack Summary
 
-| Technology        | Description                                                                 |
-|-------------------|-----------------------------------------------------------------------------|
-| **React + TypeScript** | Component-driven, statically typed front-end architecture.              |
-| **Tailwind CSS**       | Rapid UI development with mobile-first design utilities.               |
-| **Vite**               | Lightning-fast build tool optimized for modern frameworks.              |
-| **Radix UI**           | Accessible and composable UI primitives.                                |
-| **React Router**       | Declarative routing and navigation for React apps.                      |
-| **Lucide Icons**       | Lightweight and customizable iconography to complement the UI.          |
+| Tool             | Description                                                     |
+|------------------|-----------------------------------------------------------------|
+| **React + TS**   | Component-driven, statically typed frontend                     |
+| **Vite**         | Super-fast build tool                                           |
+| **Tailwind CSS** | Utility-first styling                                           |
+| **Radix UI**     | Accessible and composable UI primitives                         |
+| **React Router** | Seamless navigation between pages                               |
+| **Lucide Icons** | Lightweight, consistent icon set                                |
 
 ---
 
 ## 🧠 Architecture Decisions
 
-- **Optimized Fetching**: Queries are scoped to only request necessary fields to enhance performance and responsiveness.
-- **Data Sanitization**: Products with missing critical data (e.g., no name, barcode, or image) are omitted from the UI to ensure a clean browsing experience.
-- **Safe Rendering**: Utility functions like `safeRender()` ensure graceful handling of null or undefined fields.
-> 🔎 **Smart Category Filtering:**  
-> Fork & Find **only includes categories with over 10,000 products**.  
-> This ensures users engage with the most relevant, data-rich product segments — boosting discoverability and UX quality.
-
+- 🎯 **Targeted Fetching**: Only what’s needed = faster response + less clutter.
+- 🧼 **Data Validation**: Filter out entries without essential data.
+- 🧯 **Safe Rendering**: Custom fallback handler prevents crashes.
+- 📂 **Smart Categories**: Only categories with over **10K products** included to improve content quality.
 
 ---
 
-## ❗Troubleshooting API Connectivity
+## ❗ Troubleshooting API Issues
 
-If you encounter an error like:
+If you see:
 
 ![ERR_CONNECTION_TIMED_OUT](/public/image.png)
 
@@ -100,4 +105,4 @@ npm run dev
 The app will be running at [http://localhost:5173](http://localhost:5173)
 
 
-> 💡 **Note:** If you encounter issues fetching data from OpenFoodFacts, check your internet connection or consider switching to a different network or VPN as mentioned above.
+> 💡 **Note:** If OpenFoodFacts doesn’t respond, try switching networks or tweaking your config.
